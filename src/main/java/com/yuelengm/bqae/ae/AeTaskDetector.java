@@ -12,6 +12,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import com.yuelengm.bqae.MyMod;
 import com.yuelengm.bqae.index.BqInterfaceIndex;
+import com.yuelengm.bqae.mixin.TaskProgressableBaseAccessor;
 import com.yuelengm.bqae.party.PartyIdentity;
 import com.yuelengm.bqae.tile.TileBqInterface;
 
@@ -53,14 +54,14 @@ public final class AeTaskDetector {
             IMEMonitor<IAEItemStack> inventory = network.storage.getItemInventory();
             if (inventory == null) continue;
 
-            List<ItemExtraction> extraction = planItems(task, inventory, task.getUsersProgress(pInfo.UUID));
-            if (extraction == null) continue;
+            ItemPlan plan = planItems(task, inventory, task.getUsersProgress(pInfo.UUID));
+            if (plan == null) continue;
 
-            if (task.consume && !consumeItems(network, inventory, extraction, pInfo.PLAYER)) {
+            if (task.consume && !consumeItems(network, inventory, plan.extraction, pInfo.PLAYER)) {
                 continue;
             }
 
-            completeTask(task, pInfo, quest);
+            completeTask(task, pInfo, quest, plan.progress);
             return;
         }
     }
@@ -73,14 +74,14 @@ public final class AeTaskDetector {
             IMEMonitor<IAEFluidStack> inventory = network.storage.getFluidInventory();
             if (inventory == null) continue;
 
-            List<FluidExtraction> extraction = planFluids(task, inventory, task.getUsersProgress(pInfo.UUID));
-            if (extraction == null) continue;
+            FluidPlan plan = planFluids(task, inventory, task.getUsersProgress(pInfo.UUID));
+            if (plan == null) continue;
 
-            if (task.consume && !consumeFluids(network, inventory, extraction, pInfo.PLAYER)) {
+            if (task.consume && !consumeFluids(network, inventory, plan.extraction, pInfo.PLAYER)) {
                 continue;
             }
 
-            completeTask(task, pInfo, quest);
+            completeTask(task, pInfo, quest, plan.progress);
             return;
         }
     }
@@ -114,20 +115,25 @@ public final class AeTaskDetector {
         return PartyIdentity.get(party.getValue());
     }
 
-    private static List<ItemExtraction> planItems(TaskRetrieval task, IMEMonitor<IAEItemStack> inventory,
-        int[] progress) {
+    private static ItemPlan planItems(TaskRetrieval task, IMEMonitor<IAEItemStack> inventory, int[] progress) {
         List<AvailableItem> available = copyAvailableItems(inventory);
-        if (task.requiredItems.isEmpty()) return task.requireOnlyOneItem ? null : new ArrayList<>();
+        if (task.requiredItems.isEmpty()) {
+            return task.requireOnlyOneItem ? null : new ItemPlan(new ArrayList<>(), progress.clone());
+        }
 
         if (task.requireOnlyOneItem) {
             for (int i = 0; i < task.requiredItems.size(); i++) {
                 BigItemStack requirement = task.requiredItems.get(i);
                 long remaining = Math.max(0, requirement.stackSize - getProgress(progress, i));
-                if (remaining <= 0) return new ArrayList<>();
+                int[] completedProgress = progress.clone();
+                completedProgress[i] = requirement.stackSize;
+                if (remaining <= 0) return new ItemPlan(new ArrayList<>(), completedProgress);
 
                 List<AvailableItem> working = copyAvailableItems(available);
                 List<ItemExtraction> extraction = new ArrayList<>();
-                if (allocateItem(task, requirement, remaining, working, extraction)) return extraction;
+                if (allocateItem(task, requirement, remaining, working, extraction)) {
+                    return new ItemPlan(extraction, completedProgress);
+                }
             }
             return null;
         }
@@ -138,7 +144,12 @@ public final class AeTaskDetector {
             long remaining = Math.max(0, requirement.stackSize - getProgress(progress, i));
             if (!allocateItem(task, requirement, remaining, available, extraction)) return null;
         }
-        return extraction;
+
+        int[] completedProgress = progress.clone();
+        for (int i = 0; i < task.requiredItems.size(); i++) {
+            completedProgress[i] = task.requiredItems.get(i).stackSize;
+        }
+        return new ItemPlan(extraction, completedProgress);
     }
 
     private static boolean allocateItem(TaskRetrieval task, BigItemStack requirement, long remaining,
@@ -188,9 +199,8 @@ public final class AeTaskDetector {
         return true;
     }
 
-    private static List<FluidExtraction> planFluids(TaskFluid task, IMEMonitor<IAEFluidStack> inventory,
-        int[] progress) {
-        if (task.requiredFluids.isEmpty()) return new ArrayList<>();
+    private static FluidPlan planFluids(TaskFluid task, IMEMonitor<IAEFluidStack> inventory, int[] progress) {
+        if (task.requiredFluids.isEmpty()) return new FluidPlan(new ArrayList<>(), progress.clone());
 
         List<AvailableFluid> available = copyAvailableFluids(inventory);
         List<FluidExtraction> extraction = new ArrayList<>();
@@ -199,7 +209,12 @@ public final class AeTaskDetector {
             long remaining = Math.max(0, requirement.amount - getProgress(progress, i));
             if (!allocateFluid(task, requirement, remaining, available, extraction)) return null;
         }
-        return extraction;
+
+        int[] completedProgress = progress.clone();
+        for (int i = 0; i < task.requiredFluids.size(); i++) {
+            completedProgress[i] = task.requiredFluids.get(i).amount;
+        }
+        return new FluidPlan(extraction, completedProgress);
     }
 
     private static boolean allocateFluid(TaskFluid task, FluidStack requirement, long remaining,
@@ -268,8 +283,10 @@ public final class AeTaskDetector {
         return available;
     }
 
-    private static void completeTask(ITask task, ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
+    private static void completeTask(ITask task, ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, int[] progress) {
+        TaskProgressableBaseAccessor accessor = (TaskProgressableBaseAccessor) task;
         for (UUID uuid : pInfo.ALL_UUIDS) {
+            accessor.bqae$setUserProgress(uuid, progress.clone());
             task.setComplete(uuid);
         }
         pInfo.markDirtyParty(quest.getKey());
@@ -323,6 +340,17 @@ public final class AeTaskDetector {
         }
     }
 
+    private static final class ItemPlan {
+
+        private final List<ItemExtraction> extraction;
+        private final int[] progress;
+
+        private ItemPlan(List<ItemExtraction> extraction, int[] progress) {
+            this.extraction = extraction;
+            this.progress = progress;
+        }
+    }
+
     private static final class FluidExtraction {
 
         private final IAEFluidStack stack;
@@ -331,6 +359,17 @@ public final class AeTaskDetector {
         private FluidExtraction(IAEFluidStack stack, long amount) {
             this.stack = stack;
             this.amount = amount;
+        }
+    }
+
+    private static final class FluidPlan {
+
+        private final List<FluidExtraction> extraction;
+        private final int[] progress;
+
+        private FluidPlan(List<FluidExtraction> extraction, int[] progress) {
+            this.extraction = extraction;
+            this.progress = progress;
         }
     }
 }
