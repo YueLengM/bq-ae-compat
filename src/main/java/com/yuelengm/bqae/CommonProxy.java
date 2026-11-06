@@ -2,12 +2,15 @@ package com.yuelengm.bqae;
 
 import net.minecraftforge.common.MinecraftForge;
 
+import com.yuelengm.bqae.ae.AeCheckScheduler;
 import com.yuelengm.bqae.handler.BqInterfaceEventHandler;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.event.FMLServerStoppedEvent;
 
 public class CommonProxy {
 
@@ -15,7 +18,11 @@ public class CommonProxy {
     // GameRegistry." (Remove if not needed)
     public void preInit(FMLPreInitializationEvent event) {
         ModBlocks.register();
-        MinecraftForge.EVENT_BUS.register(new BqInterfaceEventHandler());
+        BqInterfaceEventHandler handler = new BqInterfaceEventHandler();
+        MinecraftForge.EVENT_BUS.register(handler);
+        FMLCommonHandler.instance()
+            .bus()
+            .register(handler);
 
         MyMod.LOG.info("I am MyMod at version " + Tags.VERSION);
     }
@@ -28,4 +35,8 @@ public class CommonProxy {
 
     // register server commands in this event handler (Remove if not needed)
     public void serverStarting(FMLServerStartingEvent event) {}
+
+    public void serverStopped(FMLServerStoppedEvent event) {
+        AeCheckScheduler.clear();
+    }
 }

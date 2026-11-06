@@ -77,6 +77,16 @@ public class BqInterfaceIndex extends WorldSavedData {
         return index.getLoadedInterfacesInternal(partyUid);
     }
 
+    public static boolean hasAnchors(UUID partyUid) {
+        BqInterfaceIndex index = getServerIndex();
+        return index != null && index.hasAnchorsInternal(partyUid);
+    }
+
+    private boolean hasAnchorsInternal(UUID partyUid) {
+        Set<AnchorPosition> positions = this.anchorsByParty.get(partyUid);
+        return positions != null && !positions.isEmpty();
+    }
+
     public List<Anchor> getAnchors(UUID partyUid) {
         Set<AnchorPosition> positions = this.anchorsByParty.get(partyUid);
         if (positions == null || positions.isEmpty()) return Collections.emptyList();

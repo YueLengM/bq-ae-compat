@@ -2,9 +2,11 @@ package com.yuelengm.bqae.handler;
 
 import net.minecraftforge.event.world.ChunkEvent;
 
+import com.yuelengm.bqae.ae.AeCheckScheduler;
 import com.yuelengm.bqae.index.BqInterfaceIndex;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 
 public class BqInterfaceEventHandler {
 
@@ -16,5 +18,12 @@ public class BqInterfaceEventHandler {
         if (index == null) return;
 
         index.validateChunk(event.world, event.getChunk().xPosition, event.getChunk().zPosition);
+    }
+
+    @SubscribeEvent
+    public void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
+            AeCheckScheduler.tick();
+        }
     }
 }
