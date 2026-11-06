@@ -15,7 +15,7 @@ public class BlockBqInterface extends AEBaseTileBlock {
         super(Material.iron);
         this.setTileEntity(TileBqInterface.class);
         this.setBlockName("bqae.bqInterface");
-        this.setBlockTextureName("appliedenergistics2:BlockSecurity");
+        this.setBlockTextureName("bqae:BqInterface");
         this.setHardness(2.5F);
         this.setResistance(10.0F);
     }

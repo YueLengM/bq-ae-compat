@@ -1,4 +1,4 @@
-tile.bqae.bqInterface.name=BQ接口方块
+tile.bqae.bqInterface.name=任务接口
 bqae.chat.bound=成功绑定到%s队伍。
 bqae.chat.no_party=尚未加入队伍。
 bqae.chat.already_bound=当前绑定队伍%s。
