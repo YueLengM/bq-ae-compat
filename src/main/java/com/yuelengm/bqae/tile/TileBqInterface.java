@@ -6,6 +6,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentTranslation;
 
+import com.yuelengm.bqae.index.BqInterfaceIndex;
 import com.yuelengm.bqae.party.PartyIdentity;
 
 import appeng.api.config.SecurityPermissions;
@@ -71,6 +72,7 @@ public class TileBqInterface extends AENetworkTile {
 
         this.partyId = party.getID();
         this.partyUid = PartyIdentity.getOrCreate(party.getValue());
+        BqInterfaceIndex.add(this.getWorldObj(), this.partyUid, this.partyId, this.xCoord, this.yCoord, this.zCoord);
         this.markDirty();
 
         player.addChatMessage(new ChatComponentTranslation("bqae.chat.bound", this.getPartyDisplayName()));
@@ -97,9 +99,22 @@ public class TileBqInterface extends AENetworkTile {
         return name == null ? "" : name;
     }
 
+    public UUID getPartyUid() {
+        return this.partyUid;
+    }
+
     public IStorageGrid getStorageGrid() throws GridAccessException {
         return this.getProxy()
             .getStorage();
+    }
+
+    @Override
+    public void onReady() {
+        super.onReady();
+        if (!this.getWorldObj().isRemote && this.isBindingValid()) {
+            BqInterfaceIndex
+                .add(this.getWorldObj(), this.partyUid, this.partyId, this.xCoord, this.yCoord, this.zCoord);
+        }
     }
 
     private String getPartyDisplayName() {

@@ -1,5 +1,9 @@
 package com.yuelengm.bqae;
 
+import net.minecraftforge.common.MinecraftForge;
+
+import com.yuelengm.bqae.handler.BqInterfaceEventHandler;
+
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -11,6 +15,7 @@ public class CommonProxy {
     // GameRegistry." (Remove if not needed)
     public void preInit(FMLPreInitializationEvent event) {
         ModBlocks.register();
+        MinecraftForge.EVENT_BUS.register(new BqInterfaceEventHandler());
 
         MyMod.LOG.info("I am MyMod at version " + Tags.VERSION);
     }
