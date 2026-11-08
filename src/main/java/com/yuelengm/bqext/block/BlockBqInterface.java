@@ -2,12 +2,16 @@ package com.yuelengm.bqext.block;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
 import com.yuelengm.bqext.ae.BqInterfaceIndex;
 import com.yuelengm.bqext.tile.TileBqInterface;
 
 import appeng.block.AEBaseTileBlock;
+import appeng.client.texture.FlippableIcon;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockBqInterface extends AEBaseTileBlock {
 
@@ -15,9 +19,17 @@ public class BlockBqInterface extends AEBaseTileBlock {
         super(Material.iron);
         this.setTileEntity(TileBqInterface.class);
         this.setBlockName("bqext.bqInterface");
-        this.setBlockTextureName("bqext:BqInterface");
+        this.setBlockTextureName("appliedenergistics2:BlockInterface");
         this.setHardness(2.5F);
         this.setResistance(10.0F);
+    }
+
+    @SideOnly(Side.CLIENT)
+    public void setCompositeIcon(IIcon icon) {
+        this.blockIcon = icon;
+        FlippableIcon flippable = new FlippableIcon(icon);
+        this.getRendererInstance()
+            .updateIcons(flippable, flippable, flippable, flippable, flippable, flippable);
     }
 
     @Override
