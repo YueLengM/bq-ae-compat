@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8.5-GTNH",
+  "package": "com.yuelengm.bqext.mixins.early",
+  "refmap": "mixins.bqext.refmap.json",
+  "target": "@env(DEFAULT)",
+  "injectors": {
+    "maxShiftBy": 5
+  },
+  "compatibilityLevel": "JAVA_8",
+  "overwrites": {
+    "conformVisibility": true
+  }
+}

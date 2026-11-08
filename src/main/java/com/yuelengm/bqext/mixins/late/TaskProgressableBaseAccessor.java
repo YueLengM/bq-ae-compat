@@ -1,4 +1,4 @@
-package com.yuelengm.bqext.mixin.late;
+package com.yuelengm.bqext.mixins.late;
 
 import java.util.UUID;
 
