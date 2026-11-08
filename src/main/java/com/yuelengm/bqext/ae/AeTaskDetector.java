@@ -1,6 +1,7 @@
 package com.yuelengm.bqext.ae;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,9 @@ import net.minecraftforge.fluids.FluidStack;
 
 import com.yuelengm.bqext.BQExt;
 import com.yuelengm.bqext.bq.PartyIdentity;
+import com.yuelengm.bqext.bq.RetrievalFluidSupport;
+import com.yuelengm.bqext.bq.RetrievalFluidSupport.FluidRequirement;
+import com.yuelengm.bqext.config.BqExtConfig;
 import com.yuelengm.bqext.mixins.late.TaskProgressableBaseAccessor;
 import com.yuelengm.bqext.tile.TileBqInterface;
 
@@ -48,21 +52,71 @@ public final class AeTaskDetector {
     public static void detectItems(TaskRetrieval task, ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
         if (task.isComplete(pInfo.UUID)) return;
 
-        for (NetworkView network : resolveNetworks(pInfo)) {
+        List<NetworkView> networks = resolveNetworks(pInfo);
+        int[] initialProgress = task.getUsersProgress(pInfo.UUID)
+            .clone();
+
+        if (task.consume) {
+            for (NetworkView network : networks) {
+                if (network.storage == null) continue;
+                IMEMonitor<IAEItemStack> inventory = network.storage.getItemInventory();
+                if (inventory == null) continue;
+
+                ItemPlan plan = planItems(task, inventory, initialProgress);
+                if (plan == null) continue;
+                if (!consumeItems(network, inventory, plan.extraction, pInfo.PLAYER)) continue;
+
+                completeTask(task, pInfo, quest, plan.progress);
+                return;
+            }
+            return;
+        }
+
+        int[] bestProgress = initialProgress;
+        for (NetworkView network : networks) {
             if (network.storage == null) continue;
             IMEMonitor<IAEItemStack> inventory = network.storage.getItemInventory();
             if (inventory == null) continue;
 
-            ItemPlan plan = planItems(task, inventory, task.getUsersProgress(pInfo.UUID));
-            if (plan == null) continue;
-
-            if (task.consume && !consumeItems(network, inventory, plan.extraction, pInfo.PLAYER)) {
-                continue;
+            int[] candidate = planPartialItems(task, inventory, initialProgress);
+            if (isProgressComplete(task, candidate)) {
+                applyProgress(task, pInfo, quest, candidate, true);
+                return;
             }
+            bestProgress = mergeMaxProgress(task, bestProgress, candidate);
+        }
 
-            completeTask(task, pInfo, quest, plan.progress);
+        if (!BqExtConfig.retrievalFluidCompat) {
+            applyPartialProgress(task, pInfo, quest, initialProgress, bestProgress);
             return;
         }
+
+        FluidRequirement[] requirements = RetrievalFluidSupport.resolveRequirements(task);
+        if (!hasFluidRequirements(requirements)) {
+            applyPartialProgress(task, pInfo, quest, initialProgress, bestProgress);
+            return;
+        }
+
+        for (NetworkView network : networks) {
+            if (network.storage == null) continue;
+            IMEMonitor<IAEItemStack> itemInventory = network.storage.getItemInventory();
+            IMEMonitor<IAEFluidStack> fluidInventory = network.storage.getFluidInventory();
+            if (itemInventory == null || fluidInventory == null) continue;
+
+            int[] candidate = planPartialItemsWithFluids(
+                task,
+                requirements,
+                itemInventory,
+                fluidInventory,
+                initialProgress);
+            if (isProgressComplete(task, candidate)) {
+                applyProgress(task, pInfo, quest, candidate, true);
+                return;
+            }
+            bestProgress = mergeMaxProgress(task, bestProgress, candidate);
+        }
+
+        applyPartialProgress(task, pInfo, quest, initialProgress, bestProgress);
     }
 
     public static void detectFluids(TaskFluid task, ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
@@ -151,7 +205,93 @@ public final class AeTaskDetector {
         return new ItemPlan(extraction, completedProgress);
     }
 
+    private static int[] planPartialItems(TaskRetrieval task, IMEMonitor<IAEItemStack> itemInventory,
+        int[] initialProgress) {
+        List<AvailableItem> availableItems = copyAvailableItems(itemInventory);
+        int[] progress = initialProgress.clone();
+
+        if (task.requireOnlyOneItem) {
+            for (int i = 0; i < task.requiredItems.size(); i++) {
+                BigItemStack requirement = task.requiredItems.get(i);
+                long remaining = Math.max(0, requirement.stackSize - getProgress(progress, i));
+                if (remaining <= 0) continue;
+
+                List<AvailableItem> workingItems = copyAvailableItems(availableItems);
+                List<ItemExtraction> extraction = new ArrayList<>();
+                allocateItemRemaining(task, requirement, remaining, workingItems, extraction);
+                addProgress(task, progress, i, extractionAmount(extraction));
+            }
+            return progress;
+        }
+
+        for (int i = 0; i < task.requiredItems.size(); i++) {
+            BigItemStack requirement = task.requiredItems.get(i);
+            long remaining = Math.max(0, requirement.stackSize - getProgress(progress, i));
+            if (remaining <= 0) continue;
+
+            List<ItemExtraction> extraction = new ArrayList<>();
+            allocateItemRemaining(task, requirement, remaining, availableItems, extraction);
+            addProgress(task, progress, i, extractionAmount(extraction));
+        }
+        return progress;
+    }
+
+    private static int[] planPartialItemsWithFluids(TaskRetrieval task, FluidRequirement[] fluidRequirements,
+        IMEMonitor<IAEItemStack> itemInventory, IMEMonitor<IAEFluidStack> fluidInventory, int[] initialProgress) {
+        List<AvailableItem> availableItems = copyAvailableItems(itemInventory);
+        List<AvailableRetrievalFluid> availableFluids = copyRetrievalFluids(fluidInventory);
+        int[] progress = initialProgress.clone();
+
+        if (task.requireOnlyOneItem) {
+            for (int i = 0; i < task.requiredItems.size(); i++) {
+                BigItemStack requirement = task.requiredItems.get(i);
+                long remaining = Math.max(0, requirement.stackSize - getProgress(progress, i));
+                if (remaining <= 0) continue;
+
+                List<AvailableItem> workingItems = copyAvailableItems(availableItems);
+                List<ItemExtraction> extraction = new ArrayList<>();
+                remaining = allocateItemRemaining(task, requirement, remaining, workingItems, extraction);
+                addProgress(task, progress, i, extractionAmount(extraction));
+                if (remaining <= 0) continue;
+
+                FluidRequirement fluidRequirement = fluidRequirements[i];
+                if (fluidRequirement == null) continue;
+
+                FluidStack unitFluid = fluidRequirement.getUnitFluid();
+                long needed = unitFluid.amount * remaining;
+                long available = sumRetrievalFluid(task, unitFluid, needed, availableFluids);
+                addProgress(task, progress, i, (int) (available / unitFluid.amount));
+            }
+            return progress;
+        }
+
+        for (int i = 0; i < task.requiredItems.size(); i++) {
+            BigItemStack requirement = task.requiredItems.get(i);
+            long remaining = Math.max(0, requirement.stackSize - getProgress(progress, i));
+            if (remaining <= 0) continue;
+
+            List<ItemExtraction> extraction = new ArrayList<>();
+            remaining = allocateItemRemaining(task, requirement, remaining, availableItems, extraction);
+            addProgress(task, progress, i, extractionAmount(extraction));
+            if (remaining <= 0) continue;
+
+            FluidRequirement fluidRequirement = fluidRequirements[i];
+            if (fluidRequirement == null) continue;
+
+            FluidStack unitFluid = fluidRequirement.getUnitFluid();
+            long needed = unitFluid.amount * remaining;
+            long available = sumRetrievalFluid(task, unitFluid, needed, availableFluids);
+            addProgress(task, progress, i, (int) (available / unitFluid.amount));
+        }
+        return progress;
+    }
+
     private static boolean allocateItem(TaskRetrieval task, BigItemStack requirement, long remaining,
+        List<AvailableItem> available, List<ItemExtraction> extraction) {
+        return allocateItemRemaining(task, requirement, remaining, available, extraction) <= 0;
+    }
+
+    private static long allocateItemRemaining(TaskRetrieval task, BigItemStack requirement, long remaining,
         List<AvailableItem> available, List<ItemExtraction> extraction) {
         for (AvailableItem candidate : available) {
             if (remaining <= 0) break;
@@ -162,7 +302,41 @@ public final class AeTaskDetector {
             candidate.remaining -= amount;
             remaining -= amount;
         }
-        return remaining <= 0;
+        return remaining;
+    }
+
+    private static long sumRetrievalFluid(TaskRetrieval task, FluidStack requirement, long maximum,
+        List<AvailableRetrievalFluid> available) {
+        long matched = 0;
+        for (AvailableRetrievalFluid candidate : available) {
+            if (matched >= maximum) break;
+            if (candidate.remaining <= 0 || !RetrievalFluidSupport.matchesFluid(task, requirement, candidate.stack)) {
+                continue;
+            }
+
+            matched += Math.min(maximum - matched, candidate.remaining);
+        }
+        return matched;
+    }
+
+    private static int extractionAmount(List<ItemExtraction> extraction) {
+        long amount = 0;
+        for (ItemExtraction item : extraction) {
+            amount += item.amount;
+        }
+        return (int) Math.min(Integer.MAX_VALUE, amount);
+    }
+
+    private static void addProgress(TaskRetrieval task, int[] progress, int index, int amount) {
+        int required = task.requiredItems.get(index).stackSize;
+        progress[index] = Math.min(required, progress[index] + amount);
+    }
+
+    private static boolean hasFluidRequirements(FluidRequirement[] requirements) {
+        for (FluidRequirement requirement : requirements) {
+            if (requirement != null) return true;
+        }
+        return false;
     }
 
     private static boolean matchesItem(TaskRetrieval task, BigItemStack requirement, IAEItemStack candidate) {
@@ -282,6 +456,20 @@ public final class AeTaskDetector {
         return available;
     }
 
+    private static List<AvailableRetrievalFluid> copyRetrievalFluids(IMEMonitor<IAEFluidStack> fluidInventory) {
+        List<AvailableRetrievalFluid> available = new ArrayList<>();
+        for (IAEFluidStack stack : fluidInventory.getStorageList()) {
+            if (stack != null && stack.getStackSize() > 0) {
+                available.add(
+                    new AvailableRetrievalFluid(
+                        stack.getFluidStack()
+                            .copy(),
+                        stack.getStackSize()));
+            }
+        }
+        return available;
+    }
+
     private static void completeTask(ITask task, ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, int[] progress) {
         TaskProgressableBaseAccessor accessor = (TaskProgressableBaseAccessor) task;
         for (UUID uuid : pInfo.ALL_UUIDS) {
@@ -289,6 +477,45 @@ public final class AeTaskDetector {
             task.setComplete(uuid);
         }
         pInfo.markDirtyParty(quest.getKey());
+    }
+
+    private static void applyProgress(TaskRetrieval task, ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest,
+        int[] progress, boolean complete) {
+        TaskProgressableBaseAccessor accessor = (TaskProgressableBaseAccessor) task;
+        for (UUID uuid : pInfo.ALL_UUIDS) {
+            accessor.bqext$setUserProgress(uuid, progress.clone());
+            if (complete) task.setComplete(uuid);
+        }
+        pInfo.markDirtyParty(quest.getKey());
+    }
+
+    private static void applyPartialProgress(TaskRetrieval task, ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest,
+        int[] initialProgress, int[] bestProgress) {
+        if (Arrays.equals(initialProgress, bestProgress)) return;
+        applyProgress(task, pInfo, quest, bestProgress, false);
+    }
+
+    private static boolean isProgressComplete(TaskRetrieval task, int[] progress) {
+        boolean complete = !task.requireOnlyOneItem;
+        for (int i = 0; i < task.requiredItems.size(); i++) {
+            int required = task.requiredItems.get(i).stackSize;
+            if (task.requireOnlyOneItem) {
+                complete |= getProgress(progress, i) >= required;
+                if (complete) return true;
+            } else {
+                complete &= getProgress(progress, i) >= required;
+                if (!complete) return false;
+            }
+        }
+        return complete;
+    }
+
+    private static int[] mergeMaxProgress(TaskRetrieval task, int[] current, int[] candidate) {
+        int[] merged = current.clone();
+        for (int i = 0; i < task.requiredItems.size(); i++) {
+            merged[i] = Math.max(getProgress(merged, i), getProgress(candidate, i));
+        }
+        return merged;
     }
 
     private static int getProgress(int[] progress, int index) {
@@ -323,8 +550,23 @@ public final class AeTaskDetector {
         private long remaining;
 
         private AvailableFluid(IAEFluidStack stack) {
+            this(stack, stack.getStackSize());
+        }
+
+        private AvailableFluid(IAEFluidStack stack, long remaining) {
             this.stack = stack;
-            this.remaining = stack.getStackSize();
+            this.remaining = remaining;
+        }
+    }
+
+    private static final class AvailableRetrievalFluid {
+
+        private final FluidStack stack;
+        private long remaining;
+
+        private AvailableRetrievalFluid(FluidStack stack, long remaining) {
+            this.stack = stack;
+            this.remaining = remaining;
         }
     }
 

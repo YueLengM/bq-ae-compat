@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.gtnewhorizon.gtnhmixins.builders.IMixins;
 import com.gtnewhorizon.gtnhmixins.builders.MixinBuilder;
+import com.yuelengm.bqext.config.BqExtConfig;
 
 public enum Mixins implements IMixins {
 
@@ -15,12 +16,18 @@ public enum Mixins implements IMixins {
         .setPhase(Phase.LATE)
         .addRequiredMod(MixinTargets.BETTER_QUESTING)),
 
+    BQ_CORE(new MixinBuilder("BetterQuesting core integration").addCommonMixins("TaskProgressableBaseAccessor")
+        .setPhase(Phase.LATE)
+        .addRequiredMod(MixinTargets.BETTER_QUESTING)),
+
+    BQ_RETRIEVAL_FLUID(new MixinBuilder("BetterQuesting Retrieval fluid-container compatibility")
+        .addCommonMixins("TaskRetrievalFluidCompatMixin")
+        .setPhase(Phase.LATE)
+        .addRequiredMod(MixinTargets.BETTER_QUESTING)
+        .setApplyIf(() -> BqExtConfig.retrievalFluidCompat)),
+
     BQ_AE_TASKS(new MixinBuilder("BetterQuesting AE task detection")
-        .addCommonMixins(
-            "SimpleDatabaseMixin",
-            "TaskFluidAeMixin",
-            "TaskRetrievalAeMixin",
-            "TaskProgressableBaseAccessor")
+        .addCommonMixins("SimpleDatabaseMixin", "TaskFluidAeMixin", "TaskRetrievalAeMixin")
         .setPhase(Phase.LATE)
         .addRequiredMod(MixinTargets.BETTER_QUESTING)
         .addRequiredMod(MixinTargets.APPLIED_ENERGISTICS));

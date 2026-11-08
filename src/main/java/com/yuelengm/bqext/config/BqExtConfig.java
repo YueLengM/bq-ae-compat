@@ -12,5 +12,11 @@ public final class BqExtConfig {
     @Config.DefaultBoolean(false)
     public static boolean fullscreenQuestGui = false;
 
+    @Config.Comment("Allow Retrieval container-item tasks to match equivalent fluid in inventories and AE networks.")
+    @Config.LangKey("bqext.config.retrieval_fluid_compat")
+    @Config.RequiresMcRestart
+    @Config.DefaultBoolean(true)
+    public static boolean retrievalFluidCompat = true;
+
     private BqExtConfig() {}
 }

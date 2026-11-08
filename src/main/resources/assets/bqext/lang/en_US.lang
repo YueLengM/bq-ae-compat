@@ -8,3 +8,4 @@ bqext.chat.no_permission=You do not have permission to modify this AE network.
 sidebar_button.bqext.quest_book=Quest
 bqext.config.category.general=General
 bqext.config.fullscreen_quest_gui=Fullscreen BetterQuesting GUIs
+bqext.config.retrieval_fluid_compat=Retrieval Fluid Container Compatibility

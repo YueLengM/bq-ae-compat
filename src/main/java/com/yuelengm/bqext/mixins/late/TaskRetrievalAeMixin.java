@@ -18,7 +18,7 @@ import bq_standard.tasks.TaskRetrieval;
 @Mixin(TaskRetrieval.class)
 public abstract class TaskRetrievalAeMixin {
 
-    @Inject(method = "detect", at = @At("TAIL"), remap = false)
+    @Inject(method = "detect", at = @At("TAIL"), order = 1000, remap = false)
     private void bqext$detectAeAfterInventory(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest,
         CallbackInfo callback) {
         TaskRetrieval task = (TaskRetrieval) (Object) this;

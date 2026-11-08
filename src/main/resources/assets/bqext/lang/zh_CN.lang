@@ -8,3 +8,4 @@ bqext.chat.no_permission=没有权限修改该AE网络。
 sidebar_button.bqext.quest_book=任务
 bqext.config.category.general=通用
 bqext.config.fullscreen_quest_gui=全屏 BetterQuesting 界面
+bqext.config.retrieval_fluid_compat=检索任务流体容器兼容
