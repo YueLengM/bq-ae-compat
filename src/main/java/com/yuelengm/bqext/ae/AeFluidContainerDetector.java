@@ -28,7 +28,7 @@ public final class AeFluidContainerDetector {
         if (task.isComplete(pInfo.UUID) || task.consume) return;
 
         FluidRequirement[] requirements = RetrievalFluidSupport.resolveRequirements(task);
-        if (!hasFluidRequirements(requirements)) return;
+        if (!RetrievalFluidSupport.hasRequirements(requirements)) return;
 
         int[] currentProgress = task.getUsersProgress(pInfo.UUID)
             .clone();
@@ -58,7 +58,7 @@ public final class AeFluidContainerDetector {
     private static int[] planPartialItemsWithFluids(TaskRetrieval task, FluidRequirement[] fluidRequirements,
         IMEMonitor<IAEItemStack> itemInventory, IMEMonitor<IAEFluidStack> fluidInventory, int[] initialProgress) {
         List<AeRetrievalDetector.AvailableItem> availableItems = AeRetrievalDetector.copyAvailableItems(itemInventory);
-        List<AvailableRetrievalFluid> availableFluids = copyRetrievalFluids(fluidInventory);
+        Iterable<IAEFluidStack> availableFluids = fluidInventory.getStorageList();
         int[] progress = initialProgress.clone();
 
         if (task.requireOnlyOneItem) {
@@ -68,7 +68,7 @@ public final class AeFluidContainerDetector {
                 if (remaining <= 0) continue;
 
                 List<AeRetrievalDetector.AvailableItem> workingItems = AeRetrievalDetector
-                    .copyAvailableItems(availableItems);
+                    .copyFreshAvailableItems(availableItems);
                 List<AeRetrievalDetector.ItemExtraction> extraction = new ArrayList<>();
                 remaining = AeRetrievalDetector
                     .allocateItemRemaining(task, requirement, remaining, workingItems, extraction);
@@ -80,7 +80,7 @@ public final class AeFluidContainerDetector {
 
                 FluidStack unitFluid = fluidRequirement.getUnitFluid();
                 long needed = unitFluid.amount * remaining;
-                long available = matchingFluidAmount(task, unitFluid, needed, availableFluids);
+                long available = matchingFluidAmount(unitFluid, needed, availableFluids);
                 AeRetrievalDetector.addProgress(task, progress, i, (int) (available / unitFluid.amount));
             }
             return progress;
@@ -102,52 +102,19 @@ public final class AeFluidContainerDetector {
 
             FluidStack unitFluid = fluidRequirement.getUnitFluid();
             long needed = unitFluid.amount * remaining;
-            long available = matchingFluidAmount(task, unitFluid, needed, availableFluids);
+            long available = matchingFluidAmount(unitFluid, needed, availableFluids);
             AeRetrievalDetector.addProgress(task, progress, i, (int) (available / unitFluid.amount));
         }
         return progress;
     }
 
-    private static boolean hasFluidRequirements(FluidRequirement[] requirements) {
-        for (FluidRequirement requirement : requirements) {
-            if (requirement != null) return true;
-        }
-        return false;
-    }
-
-    private static long matchingFluidAmount(TaskRetrieval task, FluidStack requirement, long maximum,
-        List<AvailableRetrievalFluid> available) {
-        for (AvailableRetrievalFluid candidate : available) {
-            if (candidate.remaining <= 0 || !RetrievalFluidSupport.matchesFluid(task, requirement, candidate.stack)) {
+    private static long matchingFluidAmount(FluidStack requirement, long maximum, Iterable<IAEFluidStack> available) {
+        for (IAEFluidStack candidate : available) {
+            if (candidate.getStackSize() <= 0 || requirement.getFluid() != candidate.getFluid()) {
                 continue;
             }
-            return Math.min(maximum, candidate.remaining);
+            return Math.min(maximum, candidate.getStackSize());
         }
         return 0;
-    }
-
-    private static List<AvailableRetrievalFluid> copyRetrievalFluids(IMEMonitor<IAEFluidStack> fluidInventory) {
-        List<AvailableRetrievalFluid> available = new ArrayList<>();
-        for (IAEFluidStack stack : fluidInventory.getStorageList()) {
-            if (stack != null && stack.getStackSize() > 0) {
-                available.add(
-                    new AvailableRetrievalFluid(
-                        stack.getFluidStack()
-                            .copy(),
-                        stack.getStackSize()));
-            }
-        }
-        return available;
-    }
-
-    private static final class AvailableRetrievalFluid {
-
-        private final FluidStack stack;
-        private long remaining;
-
-        private AvailableRetrievalFluid(FluidStack stack, long remaining) {
-            this.stack = stack;
-            this.remaining = remaining;
-        }
     }
 }

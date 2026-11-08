@@ -80,7 +80,7 @@ public final class AeRetrievalDetector {
                 completedProgress[i] = requirement.stackSize;
                 if (remaining <= 0) return new ItemPlan(new ArrayList<>(), completedProgress);
 
-                List<AvailableItem> working = copyAvailableItems(available);
+                List<AvailableItem> working = copyFreshAvailableItems(available);
                 List<ItemExtraction> extraction = new ArrayList<>();
                 if (allocateItem(task, requirement, remaining, working, extraction)) {
                     return new ItemPlan(extraction, completedProgress);
@@ -114,7 +114,7 @@ public final class AeRetrievalDetector {
                 long remaining = Math.max(0, requirement.stackSize - AeTaskDetector.getProgress(progress, i));
                 if (remaining <= 0) continue;
 
-                List<AvailableItem> workingItems = copyAvailableItems(availableItems);
+                List<AvailableItem> workingItems = copyFreshAvailableItems(availableItems);
                 List<ItemExtraction> extraction = new ArrayList<>();
                 allocateItemRemaining(task, requirement, remaining, workingItems, extraction);
                 addProgress(task, progress, i, extractionAmount(extraction));
@@ -185,7 +185,7 @@ public final class AeRetrievalDetector {
         return available;
     }
 
-    static List<AvailableItem> copyAvailableItems(List<AvailableItem> source) {
+    static List<AvailableItem> copyFreshAvailableItems(List<AvailableItem> source) {
         List<AvailableItem> available = new ArrayList<>(source.size());
         for (AvailableItem item : source) {
             available.add(new AvailableItem(item.stack.copy()));

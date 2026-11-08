@@ -50,7 +50,7 @@ public final class AeFluidDetector {
         for (int i = 0; i < task.requiredFluids.size(); i++) {
             FluidStack requirement = task.requiredFluids.get(i);
             long remaining = Math.max(0, requirement.amount - AeTaskDetector.getProgress(progress, i));
-            if (!allocateFluid(task, requirement, remaining, available, extraction)) return null;
+            if (!allocateFluid(requirement, remaining, available, extraction)) return null;
         }
 
         int[] completedProgress = progress.clone();
@@ -60,11 +60,13 @@ public final class AeFluidDetector {
         return new FluidPlan(extraction, completedProgress);
     }
 
-    private static boolean allocateFluid(TaskFluid task, FluidStack requirement, long remaining,
-        List<AvailableFluid> available, List<FluidExtraction> extraction) {
+    private static boolean allocateFluid(FluidStack requirement, long remaining, List<AvailableFluid> available,
+        List<FluidExtraction> extraction) {
         for (AvailableFluid candidate : available) {
             if (remaining <= 0) break;
-            if (candidate.remaining <= 0 || !matchesFluid(task, requirement, candidate.stack)) continue;
+            if (candidate.remaining <= 0 || requirement.getFluid() != candidate.stack.getFluid()) {
+                continue;
+            }
 
             long amount = Math.min(remaining, candidate.remaining);
             extraction.add(new FluidExtraction(candidate.stack.copy(), amount));
@@ -72,12 +74,6 @@ public final class AeFluidDetector {
             remaining -= amount;
         }
         return remaining <= 0;
-    }
-
-    private static boolean matchesFluid(TaskFluid task, FluidStack requirement, IAEFluidStack candidate) {
-        FluidStack sample = candidate.getFluidStack();
-        if (task.ignoreNbt) return requirement.getFluid() == sample.getFluid();
-        return requirement.isFluidEqual(sample);
     }
 
     private static boolean consumeFluids(NetworkView network, IMEMonitor<IAEFluidStack> inventory,

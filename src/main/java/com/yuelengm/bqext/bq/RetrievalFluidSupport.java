@@ -79,7 +79,11 @@ public final class RetrievalFluidSupport {
     }
 
     public static boolean matchesFluid(TaskRetrieval task, FluidStack requirement, FluidStack candidate) {
-        if (task.ignoreNBT) return requirement.getFluid() == candidate.getFluid();
+        return matchesFluid(task.ignoreNBT, requirement, candidate);
+    }
+
+    public static boolean matchesFluid(boolean ignoreNbt, FluidStack requirement, FluidStack candidate) {
+        if (ignoreNbt) return requirement.getFluid() == candidate.getFluid();
         return requirement.isFluidEqual(candidate);
     }
 
@@ -180,7 +184,7 @@ public final class RetrievalFluidSupport {
         return maximumSingleContainer;
     }
 
-    private static boolean hasRequirements(FluidRequirement[] requirements) {
+    public static boolean hasRequirements(FluidRequirement[] requirements) {
         for (FluidRequirement requirement : requirements) {
             if (requirement != null) return true;
         }

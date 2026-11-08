@@ -105,21 +105,7 @@ public class BqInterfaceIndex extends WorldSavedData {
         if (positions == null || positions.isEmpty()) return;
 
         for (AnchorPosition position : new ArrayList<>(positions)) {
-            TileEntity tile = world.getTileEntity(position.x, position.y, position.z);
-            Anchor anchor = this.anchors.get(position);
-            if (anchor == null) {
-                this.removePosition(position);
-                continue;
-            }
-
-            if (!(tile instanceof TileBqInterface)) {
-                this.removePosition(position);
-                continue;
-            }
-
-            if (!anchor.partyUid.equals(((TileBqInterface) tile).getPartyUid())) {
-                this.removePosition(position);
-            }
+            this.getValidInterface(world, position, false);
         }
     }
 
@@ -136,27 +122,28 @@ public class BqInterfaceIndex extends WorldSavedData {
                 continue;
             }
 
-            TileEntity tile = world.getTileEntity(position.x, position.y, position.z);
-            Anchor anchor = this.anchors.get(position);
-            if (!(tile instanceof TileBqInterface)) {
-                this.removePosition(position);
-                continue;
-            }
-
-            TileBqInterface bqInterface = (TileBqInterface) tile;
-            if (anchor == null || !anchor.partyUid.equals(bqInterface.getPartyUid())) {
-                this.removePosition(position);
-                continue;
-            }
-
-            if (!bqInterface.isBindingValid()) {
-                this.removePosition(position);
-                continue;
-            }
-
+            TileBqInterface bqInterface = this.getValidInterface(world, position, true);
+            if (bqInterface == null) continue;
             interfaces.add(bqInterface);
         }
         return interfaces;
+    }
+
+    private TileBqInterface getValidInterface(World world, AnchorPosition position, boolean requireValidBinding) {
+        Anchor anchor = this.anchors.get(position);
+        TileEntity tile = world.getTileEntity(position.x, position.y, position.z);
+        if (anchor == null || !(tile instanceof TileBqInterface)) {
+            this.removePosition(position);
+            return null;
+        }
+
+        TileBqInterface bqInterface = (TileBqInterface) tile;
+        if (!anchor.partyUid.equals(bqInterface.getPartyUid())
+            || requireValidBinding && !bqInterface.isBindingValid()) {
+            this.removePosition(position);
+            return null;
+        }
+        return bqInterface;
     }
 
     private void add(int dimension, UUID partyUid, int partyId, int x, int y, int z) {
