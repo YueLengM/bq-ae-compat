@@ -9,6 +9,7 @@ import java.util.UUID;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.StringUtils;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
@@ -33,7 +34,7 @@ public final class RetrievalFluidSupport {
         FluidRequirement[] requirements = new FluidRequirement[task.requiredItems.size()];
         for (int i = 0; i < requirements.length; i++) {
             BigItemStack required = task.requiredItems.get(i);
-            if (required == null || required.hasOreDict()) continue;
+            if (required == null || !StringUtils.isNullOrEmpty(required.getOreDict())) continue;
 
             FluidStack unitFluid = getContainedFluid(required.getBaseStack());
             if (unitFluid == null || unitFluid.amount <= 0) continue;
