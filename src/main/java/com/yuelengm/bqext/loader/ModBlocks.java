@@ -1,5 +1,6 @@
-package com.yuelengm.bqext;
+package com.yuelengm.bqext.loader;
 
+import com.yuelengm.bqext.BQExt;
 import com.yuelengm.bqext.block.BlockBqInterface;
 import com.yuelengm.bqext.tile.TileBqInterface;
 

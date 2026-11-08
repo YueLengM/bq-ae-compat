@@ -2,7 +2,7 @@ package com.yuelengm.bqext.mixins;
 
 import com.gtnewhorizon.gtnhmixins.builders.ITargetMod;
 import com.gtnewhorizon.gtnhmixins.builders.TargetModBuilder;
-import com.yuelengm.bqext.ModIds;
+import com.yuelengm.bqext.loader.ModIds;
 
 public enum MixinTargets implements ITargetMod {
 

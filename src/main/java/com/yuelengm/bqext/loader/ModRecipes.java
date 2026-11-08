@@ -1,6 +1,8 @@
-package com.yuelengm.bqext;
+package com.yuelengm.bqext.loader;
 
 import net.minecraft.item.ItemStack;
+
+import com.yuelengm.bqext.BQExt;
 
 import appeng.api.AEApi;
 import betterquesting.core.BetterQuesting;

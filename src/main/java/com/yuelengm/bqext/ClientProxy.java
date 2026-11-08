@@ -1,7 +1,8 @@
 package com.yuelengm.bqext;
 
-import com.yuelengm.bqext.ae.Ae2ClientIntegration;
-import com.yuelengm.bqext.client.gui.ServerUtilitiesClientIntegration;
+import com.yuelengm.bqext.loader.Ae2ClientIntegration;
+import com.yuelengm.bqext.loader.ModIds;
+import com.yuelengm.bqext.loader.ServerUtilitiesClientIntegration;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;

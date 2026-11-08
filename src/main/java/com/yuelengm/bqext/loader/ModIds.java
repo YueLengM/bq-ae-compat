@@ -1,4 +1,4 @@
-package com.yuelengm.bqext;
+package com.yuelengm.bqext.loader;
 
 public final class ModIds {
 

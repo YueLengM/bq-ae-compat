@@ -1,9 +1,9 @@
-package com.yuelengm.bqext.ae;
+package com.yuelengm.bqext.loader;
 
 import net.minecraftforge.common.MinecraftForge;
 
-import com.yuelengm.bqext.ModBlocks;
-import com.yuelengm.bqext.ModRecipes;
+import com.yuelengm.bqext.ae.AeCheckScheduler;
+import com.yuelengm.bqext.ae.BqInterfaceEventHandler;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 

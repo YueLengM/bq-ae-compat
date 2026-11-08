@@ -3,7 +3,7 @@ package com.yuelengm.bqext.client.texture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraftforge.client.event.TextureStitchEvent;
 
-import com.yuelengm.bqext.ModBlocks;
+import com.yuelengm.bqext.loader.ModBlocks;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;

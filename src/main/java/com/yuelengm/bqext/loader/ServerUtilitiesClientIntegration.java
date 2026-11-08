@@ -1,6 +1,8 @@
-package com.yuelengm.bqext.client.gui;
+package com.yuelengm.bqext.loader;
 
 import net.minecraftforge.common.MinecraftForge;
+
+import com.yuelengm.bqext.client.gui.QuestBookSidebarButton;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
