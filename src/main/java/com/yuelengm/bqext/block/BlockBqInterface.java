@@ -4,7 +4,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 
-import com.yuelengm.bqext.index.BqInterfaceIndex;
+import com.yuelengm.bqext.ae.BqInterfaceIndex;
 import com.yuelengm.bqext.tile.TileBqInterface;
 
 import appeng.block.AEBaseTileBlock;

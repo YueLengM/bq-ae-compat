@@ -11,9 +11,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
 import com.yuelengm.bqext.BQExt;
-import com.yuelengm.bqext.index.BqInterfaceIndex;
+import com.yuelengm.bqext.bq.PartyIdentity;
 import com.yuelengm.bqext.mixin.late.TaskProgressableBaseAccessor;
-import com.yuelengm.bqext.party.PartyIdentity;
 import com.yuelengm.bqext.tile.TileBqInterface;
 
 import appeng.api.config.Actionable;

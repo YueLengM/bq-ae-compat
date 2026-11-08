@@ -1,9 +1,6 @@
-package com.yuelengm.bqext.handler;
+package com.yuelengm.bqext.ae;
 
 import net.minecraftforge.event.world.ChunkEvent;
-
-import com.yuelengm.bqext.ae.AeCheckScheduler;
-import com.yuelengm.bqext.index.BqInterfaceIndex;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;

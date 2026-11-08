@@ -7,8 +7,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.yuelengm.bqext.index.BqInterfaceIndex;
-import com.yuelengm.bqext.party.PartyIdentity;
+import com.yuelengm.bqext.ae.BqInterfaceIndex;
+import com.yuelengm.bqext.bq.PartyIdentity;
 
 import betterquesting.api.questing.party.IParty;
 import betterquesting.api2.storage.SimpleDatabase;

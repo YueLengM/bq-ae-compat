@@ -3,7 +3,7 @@ package com.yuelengm.bqext;
 import net.minecraftforge.common.MinecraftForge;
 
 import com.yuelengm.bqext.ae.AeCheckScheduler;
-import com.yuelengm.bqext.handler.BqInterfaceEventHandler;
+import com.yuelengm.bqext.ae.BqInterfaceEventHandler;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;

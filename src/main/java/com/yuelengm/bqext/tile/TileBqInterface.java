@@ -6,8 +6,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentTranslation;
 
-import com.yuelengm.bqext.index.BqInterfaceIndex;
-import com.yuelengm.bqext.party.PartyIdentity;
+import com.yuelengm.bqext.ae.BqInterfaceIndex;
+import com.yuelengm.bqext.bq.PartyIdentity;
 
 import appeng.api.config.SecurityPermissions;
 import appeng.api.networking.GridFlags;

@@ -1,4 +1,4 @@
-package com.yuelengm.bqext.party;
+package com.yuelengm.bqext.bq;
 
 import java.util.UUID;
 
