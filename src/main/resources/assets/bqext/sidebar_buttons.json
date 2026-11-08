@@ -1,0 +1,8 @@
+{
+  "quest_book": {
+    "group": "serverutilities:util",
+    "icon": "questbook:textures/items/ItemQuestBook.png",
+    "x": 160,
+    "click": "custom:bqext:quest_book"
+  }
+}

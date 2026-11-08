@@ -5,3 +5,4 @@ bqext.chat.already_bound=当前绑定队伍%s。
 bqext.chat.bound_party_missing=原绑定队伍已解散。
 bqext.chat.no_network=该方块尚未连接到AE网络。
 bqext.chat.no_permission=没有权限修改该AE网络。
+sidebar_button.bqext.quest_book=任务
