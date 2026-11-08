@@ -1,15 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8.5-GTNH",
-  "package": "com.yuelengm.bqae.mixin",
+  "refmap": "mixins.bqae.refmap.json",
   "target": "@env(DEFAULT)",
-  "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "SimpleDatabaseMixin",
-    "TaskFluidAeMixin",
-    "TaskRetrievalAeMixin",
-    "TaskProgressableBaseAccessor"
-  ],
-  "client": [],
-  "server": []
+  "compatibilityLevel": "JAVA_8"
 }

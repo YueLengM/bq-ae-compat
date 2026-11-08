@@ -12,7 +12,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import com.yuelengm.bqae.MyMod;
 import com.yuelengm.bqae.index.BqInterfaceIndex;
-import com.yuelengm.bqae.mixin.TaskProgressableBaseAccessor;
+import com.yuelengm.bqae.mixin.late.TaskProgressableBaseAccessor;
 import com.yuelengm.bqae.party.PartyIdentity;
 import com.yuelengm.bqae.tile.TileBqInterface;
 
