@@ -1,7 +1,0 @@
-tile.bqae.bqInterface.name=BQ Interface
-bqae.chat.bound=Successfully bound to %s.
-bqae.chat.no_party=You are not in a BetterQuesting party.
-bqae.chat.already_bound=Currently bound to %s.
-bqae.chat.bound_party_missing=The bound BetterQuesting party no longer exists.
-bqae.chat.no_network=This block is not connected to an AE network.
-bqae.chat.no_permission=You do not have permission to modify this AE network.

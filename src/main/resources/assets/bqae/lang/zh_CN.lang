@@ -1,7 +1,0 @@
-tile.bqae.bqInterface.name=任务接口
-bqae.chat.bound=成功绑定到%s队伍。
-bqae.chat.no_party=尚未加入队伍。
-bqae.chat.already_bound=当前绑定队伍%s。
-bqae.chat.bound_party_missing=原绑定队伍已解散。
-bqae.chat.no_network=该方块尚未连接到AE网络。
-bqae.chat.no_permission=没有权限修改该AE网络。
