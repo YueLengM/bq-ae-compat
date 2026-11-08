@@ -1,18 +1,22 @@
 package com.yuelengm.bqext;
 
-import net.minecraftforge.common.MinecraftForge;
+import com.yuelengm.bqext.ae.Ae2ClientIntegration;
+import com.yuelengm.bqext.client.gui.ServerUtilitiesClientIntegration;
 
-import com.yuelengm.bqext.client.gui.QuestBookSidebarButton;
-import com.yuelengm.bqext.client.texture.BqInterfaceTextureHandler;
-
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
+@SuppressWarnings("unused")
 public class ClientProxy extends CommonProxy {
 
     @Override
     public void preInit(FMLPreInitializationEvent event) {
         super.preInit(event);
-        MinecraftForge.EVENT_BUS.register(new BqInterfaceTextureHandler());
-        MinecraftForge.EVENT_BUS.register(new QuestBookSidebarButton());
+        if (Loader.isModLoaded(ModIds.APPLIED_ENERGISTICS)) {
+            Ae2ClientIntegration.preInit();
+        }
+        if (Loader.isModLoaded(ModIds.SERVER_UTILITIES)) {
+            ServerUtilitiesClientIntegration.preInit();
+        }
     }
 }

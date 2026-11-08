@@ -16,7 +16,7 @@ import cpw.mods.fml.common.event.FMLServerStoppedEvent;
     version = Tags.VERSION,
     name = "BQ Ext",
     acceptedMinecraftVersions = "[1.7.10]",
-    dependencies = "required-after:appliedenergistics2;required-after:betterquesting")
+    dependencies = "required-after:betterquesting;after:appliedenergistics2;after:serverutilities")
 public class BQExt {
 
     public static final String MODID = "bqext";
