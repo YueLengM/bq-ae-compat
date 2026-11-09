@@ -70,7 +70,7 @@ public final class AeTaskDetector {
                 IStorageGrid storage = grid.getCache(IStorageGrid.class);
                 if (storage == null) continue;
 
-                networks.putIfAbsent(grid.getId(), new NetworkView(bqInterface, storage));
+                networks.putIfAbsent(grid.getId(), new NetworkView(grid.getId(), bqInterface, storage));
             } catch (GridAccessException ignored) {}
         }
         return new ArrayList<>(networks.values());
@@ -131,10 +131,12 @@ public final class AeTaskDetector {
 
     static final class NetworkView {
 
+        final UUID networkId;
         final TileBqInterface bqInterface;
         final IStorageGrid storage;
 
-        private NetworkView(TileBqInterface bqInterface, IStorageGrid storage) {
+        private NetworkView(UUID networkId, TileBqInterface bqInterface, IStorageGrid storage) {
+            this.networkId = networkId;
             this.bqInterface = bqInterface;
             this.storage = storage;
         }

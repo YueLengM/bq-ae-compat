@@ -33,19 +33,26 @@ public final class AeFluidDetector {
             IMEMonitor<IAEFluidStack> inventory = network.storage.getFluidInventory();
             if (inventory == null) continue;
 
-            FluidPlan plan = planFluids(task, inventory, task.getUsersProgress(pInfo.UUID));
+            FluidPlan plan = planFluids(
+                task,
+                AeStorageSnapshotCache.getFluidSnapshot(network),
+                task.getUsersProgress(pInfo.UUID));
             if (plan == null) continue;
-            if (task.consume && !consumeFluids(network, inventory, plan.extraction, pInfo.PLAYER)) continue;
+            if (task.consume) {
+                boolean consumed = consumeFluids(network, inventory, plan.extraction, pInfo.PLAYER);
+                AeStorageSnapshotCache.invalidateFluids(network);
+                if (!consumed) continue;
+            }
 
             AeTaskDetector.completeTask(task, pInfo, quest, plan.progress);
             return;
         }
     }
 
-    private static FluidPlan planFluids(TaskFluid task, IMEMonitor<IAEFluidStack> inventory, int[] progress) {
+    private static FluidPlan planFluids(TaskFluid task, List<IAEFluidStack> snapshot, int[] progress) {
         if (task.requiredFluids.isEmpty()) return new FluidPlan(new ArrayList<>(), progress.clone());
 
-        List<AvailableFluid> available = copyAvailableFluids(inventory);
+        List<AvailableFluid> available = createAvailableFluids(snapshot);
         List<FluidExtraction> extraction = new ArrayList<>();
         for (int i = 0; i < task.requiredFluids.size(); i++) {
             FluidStack requirement = task.requiredFluids.get(i);
@@ -98,10 +105,10 @@ public final class AeFluidDetector {
         return true;
     }
 
-    private static List<AvailableFluid> copyAvailableFluids(IMEMonitor<IAEFluidStack> inventory) {
-        List<AvailableFluid> available = new ArrayList<>();
-        for (IAEFluidStack stack : inventory.getStorageList()) {
-            if (stack != null && stack.getStackSize() > 0) available.add(new AvailableFluid(stack.copy()));
+    private static List<AvailableFluid> createAvailableFluids(List<IAEFluidStack> snapshot) {
+        List<AvailableFluid> available = new ArrayList<>(snapshot.size());
+        for (IAEFluidStack stack : snapshot) {
+            if (stack != null && stack.getStackSize() > 0) available.add(new AvailableFluid(stack));
         }
         return available;
     }

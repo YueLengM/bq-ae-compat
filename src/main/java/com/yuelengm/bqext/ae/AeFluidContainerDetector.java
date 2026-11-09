@@ -42,8 +42,8 @@ public final class AeFluidContainerDetector {
             int[] candidate = planPartialItemsWithFluids(
                 task,
                 requirements,
-                itemInventory,
-                fluidInventory,
+                AeStorageSnapshotCache.getItemSnapshot(network),
+                AeStorageSnapshotCache.getFluidSnapshot(network),
                 initialProgress);
             if (AeTaskDetector.isProgressComplete(task, candidate)) {
                 AeTaskDetector.applyProgress(task, pInfo, quest, candidate, true);
@@ -56,9 +56,8 @@ public final class AeFluidContainerDetector {
     }
 
     private static int[] planPartialItemsWithFluids(TaskRetrieval task, FluidRequirement[] fluidRequirements,
-        IMEMonitor<IAEItemStack> itemInventory, IMEMonitor<IAEFluidStack> fluidInventory, int[] initialProgress) {
-        List<AeRetrievalDetector.AvailableItem> availableItems = AeRetrievalDetector.copyAvailableItems(itemInventory);
-        Iterable<IAEFluidStack> availableFluids = fluidInventory.getStorageList();
+        List<IAEItemStack> itemSnapshot, List<IAEFluidStack> fluidSnapshot, int[] initialProgress) {
+        List<AeRetrievalDetector.AvailableItem> availableItems = AeRetrievalDetector.createAvailableItems(itemSnapshot);
         int[] progress = initialProgress.clone();
 
         if (task.requireOnlyOneItem) {
@@ -80,7 +79,7 @@ public final class AeFluidContainerDetector {
 
                 FluidStack unitFluid = fluidRequirement.getUnitFluid();
                 long needed = unitFluid.amount * remaining;
-                long available = matchingFluidAmount(unitFluid, needed, availableFluids);
+                long available = matchingFluidAmount(unitFluid, needed, fluidSnapshot);
                 AeRetrievalDetector.addProgress(task, progress, i, (int) (available / unitFluid.amount));
             }
             return progress;
@@ -102,7 +101,7 @@ public final class AeFluidContainerDetector {
 
             FluidStack unitFluid = fluidRequirement.getUnitFluid();
             long needed = unitFluid.amount * remaining;
-            long available = matchingFluidAmount(unitFluid, needed, availableFluids);
+            long available = matchingFluidAmount(unitFluid, needed, fluidSnapshot);
             AeRetrievalDetector.addProgress(task, progress, i, (int) (available / unitFluid.amount));
         }
         return progress;

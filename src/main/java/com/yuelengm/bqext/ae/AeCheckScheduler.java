@@ -44,6 +44,7 @@ public final class AeCheckScheduler {
 
     public static void tick() {
         currentTick++;
+        AeStorageSnapshotCache.clear();
         if (pending.isEmpty()) return;
 
         List<CheckKey> dueKeys = new ArrayList<>();
@@ -77,6 +78,7 @@ public final class AeCheckScheduler {
     public static void clear() {
         pending.clear();
         nextAllowed.clear();
+        AeStorageSnapshotCache.clear();
         currentTick = 0;
     }
 
