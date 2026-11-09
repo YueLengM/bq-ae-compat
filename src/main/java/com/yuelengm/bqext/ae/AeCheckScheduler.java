@@ -15,7 +15,8 @@ import bq_standard.tasks.TaskRetrieval;
 
 public final class AeCheckScheduler {
 
-    private static final int COOLDOWN_TICKS = 10;
+    private static final int DEBOUNCE_TICKS = 20;
+    private static final int COOLDOWN_TICKS = 20;
 
     private static final Map<CheckKey, PendingCheck> pending = new HashMap<>();
     private static final Map<CheckKey, Long> nextAllowed = new HashMap<>();
@@ -31,20 +32,12 @@ public final class AeCheckScheduler {
             return false;
         }
 
-        Long allowedAt = nextAllowed.get(key);
-        if (allowedAt == null || currentTick >= allowedAt) {
-            pending.remove(key);
-            nextAllowed.put(key, currentTick + COOLDOWN_TICKS);
-            run(task, pInfo, quest, kind);
-            return true;
-        }
-
         PendingCheck check = pending.get(key);
         if (check == null) {
-            check = new PendingCheck(task, pInfo, quest, kind);
+            check = new PendingCheck(task, pInfo, quest, kind, currentTick);
             pending.put(key, check);
         } else {
-            check.update(pInfo, quest);
+            check.update(pInfo, quest, currentTick);
         }
         return true;
     }
@@ -60,9 +53,11 @@ public final class AeCheckScheduler {
         while (iterator.hasNext()) {
             Map.Entry<CheckKey, PendingCheck> entry = iterator.next();
             Long allowedAt = nextAllowed.get(entry.getKey());
-            if (allowedAt != null && currentTick >= allowedAt) {
+            PendingCheck check = entry.getValue();
+            if (currentTick - check.lastRequestTick >= DEBOUNCE_TICKS
+                && (allowedAt == null || currentTick >= allowedAt)) {
                 dueKeys.add(entry.getKey());
-                dueChecks.put(entry.getKey(), entry.getValue());
+                dueChecks.put(entry.getKey(), check);
                 iterator.remove();
             }
         }
@@ -104,17 +99,21 @@ public final class AeCheckScheduler {
         private ParticipantInfo pInfo;
         private Map.Entry<UUID, IQuest> quest;
         private final CheckKind kind;
+        private long lastRequestTick;
 
-        private PendingCheck(ITask task, ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, CheckKind kind) {
+        private PendingCheck(ITask task, ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, CheckKind kind,
+            long lastRequestTick) {
             this.task = task;
             this.pInfo = pInfo;
             this.quest = quest;
             this.kind = kind;
+            this.lastRequestTick = lastRequestTick;
         }
 
-        private void update(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest) {
+        private void update(ParticipantInfo pInfo, Map.Entry<UUID, IQuest> quest, long lastRequestTick) {
             this.pInfo = pInfo;
             this.quest = quest;
+            this.lastRequestTick = lastRequestTick;
         }
     }
 
