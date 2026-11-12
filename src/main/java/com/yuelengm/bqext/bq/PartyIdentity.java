@@ -58,7 +58,13 @@ public final class PartyIdentity {
         if (partyUid != null) return partyUid;
 
         partyUid = UUID.randomUUID();
-        properties.setProperty(PARTY_UID, partyUid);
+        set(party, partyUid);
         return partyUid;
+    }
+
+    public static void set(IParty party, UUID partyUid) {
+        if (party == null || partyUid == null) return;
+        party.getProperties()
+            .setProperty(PARTY_UID, partyUid);
     }
 }
