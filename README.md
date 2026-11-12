@@ -10,7 +10,7 @@ BetterQuesting 增强。
 | 2.9.0 | [![Latest](https://img.shields.io/github/v/release/YueLengM/gtnh-bq-ext)](https://github.com/YueLengM/gtnh-bq-ext/releases/latest) |
 
 > [!WARNING]
-> 0.1.0 → 0.2.0 bqae 更名为 bqext
+> 0.1.0 → 0.2.X+ bqae 更名为 bqext
 
 ---
 
