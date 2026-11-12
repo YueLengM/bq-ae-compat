@@ -2,6 +2,7 @@ package com.yuelengm.bqext;
 
 import com.yuelengm.bqext.loader.Ae2Integration;
 import com.yuelengm.bqext.loader.ModIds;
+import com.yuelengm.bqext.loader.WailaIntegration;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -26,6 +27,9 @@ public class CommonProxy {
     public void init(FMLInitializationEvent event) {
         if (Loader.isModLoaded(ModIds.APPLIED_ENERGISTICS)) {
             Ae2Integration.init();
+        }
+        if (Loader.isModLoaded(ModIds.WAILA)) {
+            WailaIntegration.init();
         }
     }
 
