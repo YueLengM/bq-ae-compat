@@ -22,6 +22,7 @@ import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.party.IParty;
 import betterquesting.api2.storage.DBEntry;
+import betterquesting.network.handlers.NetPartySync;
 import betterquesting.questing.party.PartyManager;
 
 public class TileBqInterface extends AENetworkTile {
@@ -72,6 +73,7 @@ public class TileBqInterface extends AENetworkTile {
 
         this.partyId = party.getID();
         this.partyUid = PartyIdentity.getOrCreate(party.getValue());
+        NetPartySync.quickSync(this.partyId);
         BqInterfaceIndex.add(this.getWorldObj(), this.partyUid, this.partyId, this.xCoord, this.yCoord, this.zCoord);
         this.markDirty();
 
